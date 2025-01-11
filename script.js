@@ -5,7 +5,7 @@ if (!location.hash) {
 const roomHash = location.hash.substring(1);
 
 // Replace with your own ScaleDrone channel ID
-const drone = new ScaleDrone("y0N6q0oVsjY9fEiu");
+const drone = new ScaleDrone("LfHgHvcMx3uFQQIu");
 // Room name needs to be prefixed with 'observable-'
 const roomName = "observable-" + roomHash;
 
