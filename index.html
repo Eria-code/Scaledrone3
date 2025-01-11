@@ -1,0 +1,88 @@
+<html>
+<head>
+  <script src="https://cdn.scaledrone.com/scaledrone.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <style>
+    body {
+      background: #0098ff;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #videoContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50vh;
+    }
+
+    video {
+      max-width: 45%;
+      margin: 0 10px;
+      border-radius: 5px;
+    }
+
+    #controls {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    button {
+      margin: 0 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+
+    #chatContainer {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    #chatBox {
+      border: 1px solid #ddd;
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      background: white;
+      padding: 5px;
+    }
+
+    #reactionBox .reaction {
+      font-size: 20px;
+      animation: fadeOut 2s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+    <script src="https://cdn.scaledrone.com/scaledrone.min.js"></script>
+</head>
+<body>
+  <div id="videoContainer">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay></video>
+  </div>
+
+  <div id="controls">
+    <button id="audioButton" onclick="toggleAudio()">Mute Audio</button>
+    <button id="videoButton" onclick="toggleVideo()">Turn Off Video</button>
+    <button onclick="sendReaction('👍')">👍</button>
+    <button onclick="sendReaction('👏')">👏</button>
+    <button onclick="sendReaction('✋')">✋</button>
+  </div>
+
+  <div id="chatContainer">
+    <div id="chatBox"></div>
+    <input id="chatInput" type="text" placeholder="Type a message">
+    <button onclick="sendChatMessage()">Send</button>
+  </div>
+
+  <div id="reactionBox"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
