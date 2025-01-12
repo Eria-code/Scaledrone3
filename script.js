@@ -9,9 +9,16 @@ const drone = new ScaleDrone("LfHgHvcMx3uFQQIu");
 // Room name needs to be prefixed with 'observable-'
 const roomName = "observable-" + roomHash;
 
-// WebRTC configuration
+// WebRTC configuration with TURN servers
 const configuration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    {
+      urls: "turn:your.turn.server:3478",
+      username: "your-username",
+      credential: "your-credential",
+    },
+  ],
 };
 let room;
 let pc;
@@ -22,9 +29,10 @@ let isVideoMuted = false;
 
 function onSuccess() {}
 function onError(error) {
-  console.error(error);
+  console.error("Error:", error);
 }
 
+// Open ScaleDrone connection
 drone.on("open", (error) => {
   if (error) {
     return console.error(error);
@@ -38,8 +46,9 @@ drone.on("open", (error) => {
   });
 
   room.on("members", (members) => {
-    console.log("MEMBERS", members);
+    console.log("MEMBERS:", members);
     const isOfferer = members.length === 2;
+    console.log("Is offerer:", isOfferer);
     startWebRTC(isOfferer);
   });
 });
@@ -56,35 +65,39 @@ function sendMessage(message) {
 function startWebRTC(isOfferer) {
   pc = new RTCPeerConnection(configuration);
 
+  // Send ICE candidates
   pc.onicecandidate = (event) => {
     if (event.candidate) {
+      console.log("Sending ICE candidate:", event.candidate);
       sendMessage({ candidate: event.candidate });
+    } else {
+      console.log("All ICE candidates sent.");
     }
   };
 
-  if (isOfferer) {
-    pc.onnegotiationneeded = () => {
-      pc.createOffer().then(localDescCreated).catch(onError);
-    };
-  }
-
-  pc.onaddstream = (event) => {
-    remoteVideo.srcObject = event.stream;
+  // Handle incoming media stream
+  pc.ontrack = (event) => {
+    console.log("Track received:", event.streams[0]);
+    remoteVideo.srcObject = event.streams[0];
   };
 
+  // Add local media stream
   navigator.mediaDevices
     .getUserMedia({ audio: true, video: true })
     .then((stream) => {
       localVideo.srcObject = stream;
-      pc.addStream(stream);
-    }, onError);
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    })
+    .catch(onError);
 
+  // Handle signaling data
   room.on("data", (message, client) => {
     if (client.id === drone.clientId) {
       return;
     }
 
     if (message.sdp) {
+      console.log("Received SDP:", message.sdp);
       pc.setRemoteDescription(
         new RTCSessionDescription(message.sdp),
         () => {
@@ -95,6 +108,7 @@ function startWebRTC(isOfferer) {
         onError
       );
     } else if (message.candidate) {
+      console.log("Received ICE candidate:", message.candidate);
       pc.addIceCandidate(
         new RTCIceCandidate(message.candidate),
         onSuccess,
@@ -106,8 +120,17 @@ function startWebRTC(isOfferer) {
       showReaction(message.reaction);
     }
   });
+
+  if (isOfferer) {
+    pc.onnegotiationneeded = () => {
+      pc.createOffer()
+        .then(localDescCreated)
+        .catch(onError);
+    };
+  }
 }
 
+// Handle local description creation
 function localDescCreated(desc) {
   pc.setLocalDescription(
     desc,
